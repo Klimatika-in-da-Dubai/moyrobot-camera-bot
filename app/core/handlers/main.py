@@ -1,5 +1,6 @@
 from datetime import datetime
 from aiogram import Bot, Router, types
+from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,14 +21,16 @@ async def cmd_start(message: Message, session: AsyncSession):
     user = get_user_from_message(message)
 
     userdao = UserDAO(session=session)
-    await userdao.add_user(user)
+    if await userdao.get_by_id(user.id) is None:
+        await userdao.add_user(user)
+
     text = (
-        "Добрый день\\.\n\nВас приветствует МойРобот\\. С моей помощью вы сможете увидеть очередь на мойку\\.\n\n"
+        "Добрый день.\n\nВас приветствует МойРобот. С моей помощью вы сможете увидеть очередь на мойку.\n\n"
         "Запустить бота: /start\n"
         "Получить фото очереди: /queue\n"
         "Получить фотографии: /photo"
     )
-    await message.answer(text)
+    await message.answer(text, parse_mode=ParseMode.HTML)
 
 
 @router.message(Command(commands=["photo"]))
