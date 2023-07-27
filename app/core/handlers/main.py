@@ -22,7 +22,7 @@ async def cmd_start(message: Message, session: AsyncSession):
     userdao = UserDAO(session=session)
     await userdao.add_user(user)
     text = (
-        "Добрый день.\n\nВас приветствует МойРобот. С моей помощью вы сможете увидеть очередь на мойку.\n\n"
+        "Добрый день\\.\n\nВас приветствует МойРобот. С моей помощью вы сможете увидеть очередь на мойку\\.\n\n"
         "Запустить бота: /start\n"
         "Получить фото очереди: /queue\n"
         "Получить фотографии: /photo"
