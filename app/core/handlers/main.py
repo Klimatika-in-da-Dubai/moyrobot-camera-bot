@@ -1,5 +1,5 @@
 from datetime import datetime
-from aiogram import Bot, Router, types
+from aiogram import Bot, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message

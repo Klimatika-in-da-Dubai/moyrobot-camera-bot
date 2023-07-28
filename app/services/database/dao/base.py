@@ -21,13 +21,13 @@ class BaseDAO(Generic[Model]):
         self._model = model
         self._session = session
 
-    async def get_all(self) -> list[Row[tuple[Model]]]:
+    async def get_all(self) -> list[Model]:
         """
         :return: List of models.
         """
 
         result = await self._session.execute(select(self._model))
-        return [i for i in result.all()]
+        return list(result.scalars().all())
 
     async def get_by_id(self, id_: int) -> Model:
         """
