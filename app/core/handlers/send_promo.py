@@ -2,7 +2,7 @@ from enum import IntEnum, auto
 import logging
 from typing_extensions import assert_never
 from aiogram import Bot, Router, F
-from aiogram.enums import ParseMode
+from aiogram.enums import ParseMode, parse_mode
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
@@ -52,8 +52,9 @@ async def get_promo_text(message: Message, state: FSMContext):
     await state.update_data(mailing_type=MailingType.TEXT)
     await state.update_data(html_mailing=html_text)
 
+    await message.answer(html_text, parse_mode=ParseMode.HTML)
     await message.answer(
-        f"Вы хотите начать рассылку?\n\n{html_text}",
+        f"Вы хотите начать рассылку?",
         parse_mode=ParseMode.HTML,
         reply_markup=get_yes_no_keyboard(),
     )
@@ -73,7 +74,6 @@ async def get_promo_photo(message: Message, state: FSMContext):
     await state.update_data(mailing_photo_id=photo.file_id)
 
     await message.answer_photo(photo=photo.file_id, caption=html_text)
-
     await message.answer(
         f"Вы хотите начать рассылку?",
         parse_mode=ParseMode.HTML,
