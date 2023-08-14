@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.core.handlers import handlers_router
 from app.core.middlewares.camera_streams import CamerasStreamsMiddleware
 from app.core.middlewares.config import ConfigMiddleware
-from app.core.middlewares.db import DbSessionMiddleware
+from app.core.middlewares.db import AddUserDbMiddleware, DbSessionMiddleware
 from app.services.cameras.camera_stream import CameraStream
 from app.services.database.connector import setup_get_pool
 
@@ -28,6 +28,8 @@ def setup_middlewares(
     config: Config,
     cameras: list[CameraStream],
 ):
+    dp.message.middleware(AddUserDbMiddleware(session))
+
     dp.update.middleware(DbSessionMiddleware(session))
     dp.update.middleware(ConfigMiddleware(config))
     dp.update.middleware(CamerasStreamsMiddleware(cameras))
