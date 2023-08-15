@@ -1,6 +1,7 @@
 bot:
   token: 
   parse_mode: 
+  analytics: 
 
 database:
   host: 
@@ -41,5 +42,7 @@ cameras:
       port: 
       path: 
 
-
+ga4:
+  measurement_id: 
+  api_secret: 
 

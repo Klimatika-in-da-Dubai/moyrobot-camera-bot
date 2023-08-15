@@ -7,6 +7,8 @@ from app.core.handlers import handlers_router
 from app.core.middlewares.camera_streams import CamerasStreamsMiddleware
 from app.core.middlewares.config import ConfigMiddleware
 from app.core.middlewares.db import AddUserDbMiddleware, DbSessionMiddleware
+from app.core.middlewares.ga4 import GA4Middleware
+from app.core.middlewares.metrics import UsageMetricsMiddleware
 from app.services.cameras.camera_stream import CameraStream
 from app.services.database.connector import setup_get_pool
 
@@ -28,11 +30,16 @@ def setup_middlewares(
     config: Config,
     cameras: list[CameraStream],
 ):
-    dp.message.middleware(AddUserDbMiddleware(session))
-
+    """
+    Setup middlewares for dispatcher and returns middlewares which need to be used in other functions
+    """
     dp.update.middleware(DbSessionMiddleware(session))
     dp.update.middleware(ConfigMiddleware(config))
     dp.update.middleware(CamerasStreamsMiddleware(cameras))
+
+    dp.message.middleware(GA4Middleware(config.ga4))
+    dp.message.middleware(AddUserDbMiddleware(session))
+    dp.message.middleware(UsageMetricsMiddleware(session))
 
 
 def get_cameras(config: Config) -> list[CameraStream]:
@@ -53,6 +60,7 @@ async def main():
     session = await setup_get_pool(config.db.uri)
     dp = Dispatcher(storage=RedisStorage.from_url(config.redis.url))
     cameras = get_cameras(config)
+
     setup_routers(dp)
     setup_middlewares(dp, session, config, cameras)
 

@@ -3,54 +3,11 @@ import os
 from dataclasses import dataclass, field
 import datetime
 from app.settings import paths
+from app.settings.bot import Bot, get_parse_mode
 from app.settings.camera import CameraConfig, get_cameras
+from app.settings.database import DB, Redis
+from app.settings.ga4 import GA4, get_ga4
 from app.settings.terminal import Terminal, get_terminals
-
-
-@dataclass
-class Bot:
-    """Bot config"""
-
-    token: str
-    parse_mode: str
-
-
-@dataclass
-class DB:
-    """Database config"""
-
-    host: str
-    name: str
-    user: str
-    password: str
-
-    @property
-    def uri(self) -> str:
-        """Returns uri of postgres database."""
-        return (
-            f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}/{self.name}"
-        )
-
-
-@dataclass
-class Redis:
-    """RedisStorage config"""
-
-    host: str
-    port: str
-    db: str
-    user: str
-    password: str
-
-    @property
-    def url(self) -> str:
-        if self.user == "":
-            return f"redis://{self.host}:{self.port}/{self.db}"
-
-        if self.password == "":
-            return f"redis://{self.user}@{self.host}:{self.port}/{self.db}"
-
-        return f"redis://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
 
 
 @dataclass
@@ -82,23 +39,9 @@ class Config:
     bot: Bot
     db: DB
     redis: Redis
+    ga4: GA4
     terminals: list[Terminal] = field(default_factory=list)
     cameras: list[CameraConfig] = field(default_factory=list)
-
-
-def get_parse_mode(bot_section) -> str:
-    """
-    Get & return parse mode. Provides to bot instance.
-    :param bot_section: configparser section
-    """
-
-    try:
-        if bot_section["parse_mode"] in ("HTML", "MarkdownV2"):
-            return bot_section["parse_mode"]
-        return "HTML"
-    # Param parse_mode isn't set in app.ini. HTML will be set.
-    except KeyError:
-        return "HTML"
 
 
 def load_config() -> Config:
@@ -130,4 +73,5 @@ def load_config() -> Config:
         ),
         terminals=get_terminals(config),
         cameras=get_cameras(config),
+        ga4=get_ga4(config),
     )

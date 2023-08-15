@@ -22,6 +22,7 @@ from app.services.database.base import Base
 from app.services.database.models.user import *
 from app.services.database.models.role import *
 from app.services.database.models.permissions import *
+from app.services.database.models.command_usage import *
 
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
