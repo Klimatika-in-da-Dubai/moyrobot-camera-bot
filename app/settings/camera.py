@@ -25,7 +25,7 @@ class CameraURI:
 
         address += "/"
         address += self.path
-        return address
+        return address + "?tcp"
 
 
 @dataclass

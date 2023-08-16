@@ -3,6 +3,7 @@ from aiogram import Bot, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.cameras.camera_stream import (
     CameraStream,
@@ -11,6 +12,7 @@ from app.services.cameras.camera_stream import (
 
 from app.services.database.dao.user import UserDAO, get_user_from_message
 from app.settings.config import Config
+
 
 router = Router()
 
@@ -64,3 +66,17 @@ async def cmd_queue(
         photos.append(get_input_media_photo_to_send(camera, config))
 
     await bot.send_media_group(message.chat.id, photos)
+
+
+@router.message(Command(commands=["stats"]))
+async def cmd_stats(message: Message, session: AsyncSession):
+    """
+    Creates excel file from view hourly_usage
+    (SELECT date_trunc('hour', usage_timestamp), count(*) as count_messages FROM commands_usages GROUP BY date_trunc('hour', usage_timestamp) ORDER BY date_trunc;)
+    """
+    query = text("SELECT * FROM hourly_usage ORDER BY date_trunc DESC LIMIT 12;")
+    result = await session.execute(query)
+    message_text = ""
+    for row in result:
+        message_text += f"{row[0]}\t{row[1]}\n"
+    await message.answer(message_text)
