@@ -71,10 +71,10 @@ async def cmd_queue(
 @router.message(Command(commands=["stats"]))
 async def cmd_stats(message: Message, session: AsyncSession):
     """
-    Creates excel file from view hourly_usage
-    (SELECT date_trunc('hour', usage_timestamp), count(*) as count_messages FROM commands_usages GROUP BY date_trunc('hour', usage_timestamp) ORDER BY date_trunc;)
+    Send table from view daily_usage
+
     """
-    query = text("SELECT * FROM hourly_usage ORDER BY date_trunc DESC LIMIT 12;")
+    query = text("SELECT * FROM daily_usage LIMIT 12;")
     result = await session.execute(query)
     message_text = ""
     for row in result:
