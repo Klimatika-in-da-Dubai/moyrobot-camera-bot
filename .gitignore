@@ -162,3 +162,5 @@ cython_debug/
 config.yml
 alembic.ini
 scripts/versions
+
+mytest_*
