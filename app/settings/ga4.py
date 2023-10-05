@@ -1,7 +1,7 @@
-from aiogram.fsm.storage.base import dataclass
+from dataclasses import dataclass
 
 
-@dataclass
+@dataclass()
 class GA4:
     measurement_id: str
     api_secret: str

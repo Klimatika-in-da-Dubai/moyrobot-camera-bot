@@ -45,8 +45,10 @@ def __convert_frame_to_str_image(frame: np.ndarray) -> np.ndarray:
 
 
 def get_image(camera: CameraStream, config: Config):
-    if __is_need_to_update_photo(camera, config) or camera.image is None:
+    if camera.image is None or __is_need_to_update_photo(camera, config):
         camera.update_image()
+    if camera.image is None:
+        raise ValueError("Image from camera is None")
     image = BytesIO(__convert_frame_to_str_image(camera.image).tobytes())
     image.seek(0)
     return image.read()
