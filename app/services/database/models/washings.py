@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy import VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
 from app.services.database.base import Base
 
@@ -12,7 +13,7 @@ class Washing(Base):
     start_date: Mapped[datetime] = mapped_column(nullable=True)
     end_date: Mapped[datetime] = mapped_column(nullable=True)
     mode: Mapped[int]
-    phone: Mapped[str] = mapped_column(nullable=True)
+    phone: Mapped[str] = mapped_column(VARCHAR(12), nullable=True)
     bonuses: Mapped[int] = mapped_column(nullable=True)
     price: Mapped[float]
 
