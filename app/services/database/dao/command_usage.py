@@ -1,4 +1,3 @@
-from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.database.models.command_usage import CommandUsage

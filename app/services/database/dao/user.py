@@ -22,6 +22,9 @@ class UserDAO(BaseDAO[User]):
 
 
 def get_user_from_message(message: Message) -> User:
+    """
+    Creates User model from telegram message
+    """
     return User(
         id=message.from_user.id,  # pyright: ignore
         first_name=message.from_user.first_name,  # pyright: ignore

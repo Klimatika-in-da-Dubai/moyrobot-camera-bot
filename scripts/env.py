@@ -23,6 +23,8 @@ from app.services.database.models.user import *
 from app.services.database.models.role import *
 from app.services.database.models.permissions import *
 from app.services.database.models.command_usage import *
+from app.services.database.models.bonus import *
+from app.services.database.models.washings import *
 
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
