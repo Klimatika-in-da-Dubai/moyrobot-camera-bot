@@ -10,6 +10,7 @@ class Washing(Base):
     id: Mapped[str] = mapped_column(primary_key=True)
     terminal: Mapped[int]
     date: Mapped[datetime]
+    state: Mapped[str]
     start_date: Mapped[datetime] = mapped_column(nullable=True)
     end_date: Mapped[datetime] = mapped_column(nullable=True)
     mode: Mapped[int]
