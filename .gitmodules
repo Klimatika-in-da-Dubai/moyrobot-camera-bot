@@ -1,3 +1,6 @@
 [submodule "app/services/database"]
 	path = app/services/database
 	url = git@github.com:Klimatika-in-da-Dubai/client_database.git
+[submodule "app/services/client_database"]
+	path = app/services/client_database
+	url = git@github.com:Klimatika-in-da-Dubai/client_database.git

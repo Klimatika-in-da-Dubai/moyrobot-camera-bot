@@ -18,13 +18,13 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.services.database.base import Base
-from app.services.database.models.user import *
-from app.services.database.models.role import *
-from app.services.database.models.permissions import *
-from app.services.database.models.command_usage import *
-from app.services.database.models.bonus import *
-from app.services.database.models.washings import *
+from app.services.client_database.base import Base
+from app.services.client_database.models.user import *
+from app.services.client_database.models.role import *
+from app.services.client_database.models.permissions import *
+from app.services.client_database.models.command_usage import *
+from app.services.client_database.models.client_bonus import *
+from app.services.client_database.models.washing import *
 
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata

@@ -3,6 +3,16 @@ import logging
 
 
 class TerminalSession:
+    """
+    Class that implements connection to terminal site
+    In cookies saves session information which helps not to login every time when used
+
+    Usage:
+        terminal_session = TerminalSession(...)
+        async with terminal_session as session:
+            ...
+    """
+
     def __init__(self, terminal_id: int, url: str, login: str, password: str) -> None:
         self.terminal_id = terminal_id
         self.url = url

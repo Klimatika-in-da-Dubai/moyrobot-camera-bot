@@ -4,7 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Message, TelegramObject
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.services.database.dao.user import UserDAO, get_user_from_message
+from app.services.client_database.dao.user import UserDAO, get_user_from_message
 
 
 class DbSessionMiddleware(BaseMiddleware):
@@ -25,7 +25,7 @@ class DbSessionMiddleware(BaseMiddleware):
 
 class AddUserDbMiddleware(BaseMiddleware):
     """
-    Middleware for adding users to Database if they are not exist
+    Middleware for adding users to client_databaseif they are not exist
     """
 
     def __init__(self, session_pool: async_sessionmaker) -> None:

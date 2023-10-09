@@ -164,3 +164,4 @@ alembic.ini
 scripts/versions
 
 mytest_*
+myscripts*

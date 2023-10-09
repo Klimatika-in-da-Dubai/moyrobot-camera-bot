@@ -11,7 +11,7 @@ class Terminal:
 
 def get_terminals(config: dict) -> list[Terminal]:
     terminals = []
-    terminals_dict = config.get("terminal")
+    terminals_dict = config.get("terminals")
     if terminals_dict is None:
         return terminals
 

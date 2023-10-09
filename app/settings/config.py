@@ -6,7 +6,6 @@ from app.settings import paths
 from app.settings.bot import Bot, get_parse_mode
 from app.settings.camera import CameraConfig, get_cameras
 from app.settings.database import DB, Redis
-from app.settings.ga4 import GA4, get_ga4
 from app.settings.terminal import Terminal, get_terminals
 
 
@@ -39,7 +38,6 @@ class Config:
     bot: Bot
     db: DB
     redis: Redis
-    ga4: GA4
     terminals: list[Terminal] = field(default_factory=list)
     cameras: list[CameraConfig] = field(default_factory=list)
 
@@ -73,5 +71,4 @@ def load_config() -> Config:
         ),
         terminals=get_terminals(config),
         cameras=get_cameras(config),
-        ga4=get_ga4(config),
     )

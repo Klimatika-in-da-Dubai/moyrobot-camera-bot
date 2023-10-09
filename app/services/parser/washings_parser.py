@@ -3,13 +3,13 @@ from datetime import datetime
 import pandas as pd
 from typing import Optional
 
-from app.services.database.models.washings import Washing
+from app.services.client_database.models.washing import Washing
 
 from app.services.terminal.session import TerminalSession
 from app.utils.phone import phone_to_text
 
 
-class Parser:
+class WashingsParser:
     def __init__(self, sessions: list[TerminalSession]) -> None:
         self.sessions: list[TerminalSession] = sessions
 
@@ -57,6 +57,7 @@ class Parser:
         id = str(washing_row["Id"])
         terminal = terminal_id
         date = self.get_date(washing_row["Дата"])
+        state = washing_row["Состояние  БУМ"]
         start_date = self.get_date(washing_row["Дата запуска  БУМ"])
         end_date = self.get_date(washing_row["Дата завершения  БУМ"])
         mode = self.get_mode(washing_row["Режим  БУМ"])
@@ -67,6 +68,7 @@ class Parser:
             id=id,
             terminal=terminal,
             date=date,
+            state=state,
             start_date=start_date,
             end_date=end_date,
             mode=mode,

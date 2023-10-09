@@ -1,13 +1,11 @@
 from aiogram import BaseMiddleware
-from aiogram import BaseMiddleware
 from typing import Callable, Awaitable, Dict, Any
 
-from aiogram import BaseMiddleware
 from aiogram.types import Message, TelegramObject
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from app.services.database.dao.command_usage import CommandUsageDAO
+from app.services.client_database.dao.command_usage import CommandUsageDAO
 
-from app.services.database.models.command_usage import CommandUsage
+from app.services.client_database.models.command_usage import CommandUsage
 
 
 class UsageMetricsMiddleware(BaseMiddleware):
@@ -21,7 +19,7 @@ class UsageMetricsMiddleware(BaseMiddleware):
         message: Message,
         data: Dict[str, Any],
     ) -> Any:
-        if message.text and message.text.startswith("/"):
+        if message.text:
             await self.insert_command_usage_metric(message)
         return await handler(message, data)
 

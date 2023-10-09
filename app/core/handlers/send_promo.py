@@ -1,8 +1,7 @@
-from enum import IntEnum, auto
 import logging
 from typing_extensions import assert_never
 from aiogram import Bot, Router, F
-from aiogram.enums import ParseMode, parse_mode
+from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
@@ -12,7 +11,7 @@ from app.core.keyboards.yes_no import YesNoCB, YesNoChoice, get_yes_no_keyboard
 from app.core.states.states import SendPromo
 from app.core.utils.send_promo import get_mailing_type, MailingType
 
-from app.services.database.dao.user import UserDAO
+from app.services.client_database.dao.user import UserDAO
 
 send_promo_router = Router()
 
@@ -54,7 +53,7 @@ async def get_promo_text(message: Message, state: FSMContext):
 
     await message.answer(html_text, parse_mode=ParseMode.HTML)
     await message.answer(
-        f"Вы хотите начать рассылку?",
+        "Вы хотите начать рассылку?",
         parse_mode=ParseMode.HTML,
         reply_markup=get_yes_no_keyboard(),
     )
@@ -75,7 +74,7 @@ async def get_promo_photo(message: Message, state: FSMContext):
 
     await message.answer_photo(photo=photo.file_id, caption=html_text)
     await message.answer(
-        f"Вы хотите начать рассылку?",
+        "Вы хотите начать рассылку?",
         parse_mode=ParseMode.HTML,
         reply_markup=get_yes_no_keyboard(),
     )
