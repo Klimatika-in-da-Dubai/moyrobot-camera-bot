@@ -21,6 +21,6 @@ def is_phone_correct(phone: str) -> bool:
 
 def format_phone(phone: str) -> str:
     phone_pattern = re.compile(r"(\+7)(\d{3})(\d{3})(\d{2})(\d{2})")
-    format_pattern = r"\1 (\2) \3-\4-\5"
+    format_pattern = r"\1(\2)\3-\4-\5"
     formatted_phone = re.sub(phone_pattern, format_pattern, phone)
     return formatted_phone

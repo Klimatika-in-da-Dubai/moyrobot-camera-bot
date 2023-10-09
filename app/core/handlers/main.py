@@ -82,7 +82,7 @@ async def msg_get_bonuses(
         return
 
     if user.phone is None:
-        msg_phone(message, state)
+        await msg_phone(message, state)
         return
 
     clientbonusdao = ClientBonusDAO(session=session)
