@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+import io
 import pandas as pd
 from typing import Optional
 
@@ -42,7 +43,7 @@ class WashingsParser:
         return self.parse_washings_dataframe(terminal_id, df)
 
     def get_washings_dataframe(self, page: str) -> pd.DataFrame:
-        df = pd.read_html(page)[0]
+        df = pd.read_html(io.StringIO(page))[0]
         return df
 
     def parse_washings_dataframe(
