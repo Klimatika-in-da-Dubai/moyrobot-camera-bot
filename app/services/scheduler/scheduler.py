@@ -10,5 +10,5 @@ def setup_scheduler(
     bot: Bot, terminal_sessions: list[TerminalSession], sessionmaker: async_sessionmaker
 ) -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler()
-    setup_parser_job(scheduler, terminal_sessions, sessionmaker)
+    setup_parser_job(scheduler, bot, terminal_sessions, sessionmaker)
     return scheduler

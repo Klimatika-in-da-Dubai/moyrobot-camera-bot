@@ -18,6 +18,7 @@ SEND_NOTIFICATION_DELAY = 0.06
 
 def setup_parser_job(
     scheduler: AsyncIOScheduler,
+    bot: Bot,
     terminal_sessions: list[TerminalSession],
     session: async_sessionmaker,
 ):
@@ -25,7 +26,7 @@ def setup_parser_job(
         func=do_parser_work,
         trigger="cron",
         minute="*/1",
-        args=(terminal_sessions, session),
+        args=(bot: Bot, terminal_sessions, session),
         name="Update database job",
     )
 
