@@ -26,7 +26,7 @@ def setup_parser_job(
         func=do_parser_work,
         trigger="cron",
         minute="*/1",
-        args=(bot: Bot, terminal_sessions, session),
+        args=(bot, terminal_sessions, session),
         name="Update database job",
     )
 
