@@ -76,7 +76,7 @@ async def main():
 
     setup_routers(dp)
     setup_middlewares(dp, sessionmaker, config, cameras)
-    scheduler = setup_scheduler(terminal_sessions, sessionmaker)
+    scheduler = setup_scheduler(bot, terminal_sessions, sessionmaker)
     try:
         scheduler.start()
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
