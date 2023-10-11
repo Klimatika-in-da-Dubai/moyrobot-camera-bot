@@ -8,3 +8,7 @@ class SendPromo(StatesGroup):
 
 class GetPhone(StatesGroup):
     get_phone = State()
+
+
+class GetFeedback(StatesGroup):
+    get_feedback = State()
