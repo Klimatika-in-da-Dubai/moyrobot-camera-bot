@@ -69,14 +69,15 @@ def get_cameras(config: Config) -> list[CameraStream]:
 async def main():
     config: Config = load_config()
     bot = Bot(config.bot.token, parse_mode=config.bot.parse_mode)
+    storage = RedisStorage.from_url(config.redis.url)
+    dp = Dispatcher(storage=storage)
+
     sessionmaker = await setup_get_pool(config.db.uri)
     terminal_sessions = setup_terminal_sessions(config)
-    dp = Dispatcher(storage=RedisStorage.from_url(config.redis.url))
     cameras = get_cameras(config)
-
     setup_routers(dp)
     setup_middlewares(dp, sessionmaker, config, cameras)
-    scheduler = setup_scheduler(bot, terminal_sessions, sessionmaker)
+    scheduler = setup_scheduler(bot, terminal_sessions, sessionmaker, storage)
     try:
         scheduler.start()
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
