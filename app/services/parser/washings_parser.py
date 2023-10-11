@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime
 import io
+import re
 import pandas as pd
 from typing import Optional
+
 
 from app.services.client_database.models.washing import Washing
 
@@ -64,7 +66,9 @@ class WashingsParser:
         mode = self.get_mode(washing_row["Режим  БУМ"])
         phone = self.get_phone(washing_row["Клиент"])
         bonuses = self.get_bonuses(washing_row["Бонусы  Бонусы"])
+        promocode = self.get_promocode(washing_row["Промокод  Промокоды"])
         price = int(washing_row["Сумма"]) // 100
+
         return Washing(
             id=id,
             terminal=terminal,
@@ -75,6 +79,7 @@ class WashingsParser:
             mode=mode,
             phone=phone,
             bonuses=bonuses,
+            promocode=promocode,
             price=price,
         )
 
@@ -95,3 +100,9 @@ class WashingsParser:
         if pd.isna(bonuses):
             return None
         return int(bonuses)
+
+    def get_promocode(self, promocode) -> Optional[int]:
+        if pd.isna(promocode):
+            return None
+        promocode = re.findall(r"[0-9]+", promocode)
+        return int(promocode[0])
