@@ -16,7 +16,7 @@ from app.services.terminal.session import TerminalSession
 SEND_NOTIFICATION_DELAY = 0.06
 
 
-def setup_parser_job(
+def setup_hande_washings_job(
     scheduler: AsyncIOScheduler,
     bot: Bot,
     terminal_sessions: list[TerminalSession],
@@ -26,19 +26,23 @@ def setup_parser_job(
         func=do_parser_work,
         trigger="cron",
         minute="*/1",
-        args=(bot, terminal_sessions, session),
+        args=(bot, terminal_sessions, session, scheduler),
         name="Update database job",
     )
 
 
 async def do_parser_work(
-    bot: Bot, terminal_sessions: list[TerminalSession], sessionmaker: async_sessionmaker
+    bot: Bot,
+    terminal_sessions: list[TerminalSession],
+    sessionmaker: async_sessionmaker,
+    scheduler: AsyncIOScheduler,
 ):
     parser = WashingsParser(terminal_sessions)
     washings = await parser.get_washings()
     async with sessionmaker() as session:
         await update_bonuses(washings, session)
         await send_bonus_notifications(bot, washings, session)
+        await create_client_review_jobs(scheduler, bot, washings, session)
         await update_washings(washings, session)
 
 
@@ -103,6 +107,15 @@ async def send_bonus_notifications(
                 logging.error(e)
 
             await asyncio.sleep(SEND_NOTIFICATION_DELAY)
+
+
+async def create_client_review_jobs(
+    scheduler: AsyncIOScheduler,
+    bot: Bot,
+    washings: list[Washing],
+    session: AsyncSession,
+):
+    ...
 
 
 async def update_washings(washings: list[Washing], session: AsyncSession):
