@@ -5,6 +5,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
+from apscheduler.schedulers.asyncio import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.keyboards.cancel import CancelCB, get_cancel_keyboard
 from app.core.keyboards.yes_no import YesNoCB, YesNoChoice, get_yes_no_keyboard
@@ -14,6 +15,9 @@ from app.core.utils.send_promo import get_mailing_type, MailingType
 from app.services.client_database.dao.user import UserDAO
 
 send_promo_router = Router()
+
+
+SENDING_PROMO_DELAY = 0.04  # 40 milliseconds
 
 
 @send_promo_router.message(Command(commands=["promo"]))
@@ -91,7 +95,13 @@ async def yes_promo_send(
     """
     await cb.answer()
     await cb.message.edit_reply_markup()  # pyright: ignore
-    await start_mailing(bot, state, session)
+
+    try:
+        await start_mailing(bot, state, session)
+    except Exception:
+        await cb.message.answer("Не удалось произвести рассылку(")  # type: ignore
+        return
+
     await cb.message.edit_text(text="Рассылка произведена!")  # pyright: ignore
 
 
@@ -144,7 +154,8 @@ async def start_photo_mailing(bot: Bot, session: AsyncSession, state: FSMContext
             )
         except Exception as e:
             logging.debug(e)
-            continue
+
+        await asyncio.sleep(SENDING_PROMO_DELAY)
 
 
 @send_promo_router.callback_query(
