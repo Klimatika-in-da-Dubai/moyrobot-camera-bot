@@ -20,14 +20,8 @@ from app.services.cameras.camera_stream import (
 from app.services.client_database.dao.client_bonus import ClientBonusDAO
 
 from app.services.client_database.dao.user import UserDAO
-from app.services.client_database.dao.washing import WashingDAO
 from app.services.client_database.models.client_bonus import ClientBonus
 from app.services.client_database.models.user import User
-from app.services.client_database.models.washing import Washing
-from app.services.scheduler.washings_handling.client_feedback import (
-    create_storage_key,
-    get_client_feedback,
-)
 from app.settings.config import Config
 from app.utils.phone import format_phone, is_phone_correct, phone_to_text
 
@@ -154,25 +148,3 @@ async def cmd_stats(message: Message, session: AsyncSession):
     for row in result:
         message_text += f"{row[0]}\t{row[1]}\n"
     await message.answer(message_text)
-
-
-@router.message(Command(commands=["test_feedback"]))
-async def test_feedback(
-    message: Message, bot: Bot, state: FSMContext, session: AsyncSession
-):
-    userdao = UserDAO(session)
-    washingdao = WashingDAO(session)
-
-    user: User | None = await userdao.get_by_id(message.chat.id)
-    if user is None:
-        await message.answer("Произошла ошибка при получении пользователя")
-        return
-
-    washing: Washing | None = await washingdao.get_by_id("263063")
-    if washing is None:
-        await message.answer("Произошла ошибка при получении мойки")
-        return
-
-    key = create_storage_key(bot, user)
-    new_state = FSMContext(storage=state.storage, key=key)
-    await get_client_feedback(bot, user, washing, session, new_state)

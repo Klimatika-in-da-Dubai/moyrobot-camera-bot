@@ -41,18 +41,18 @@ async def msg_album_feedback(
 
 @get_feedback_router.message(F.text)
 async def msg_text_feedback(message: Message, state: FSMContext, session: AsyncSession):
-    await message.answer(message.text)
+    await message.answer(message.text)  # type: ignore
 
 
 @get_feedback_router.message(F.photo)
 async def msg_photo_feedback(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    await message.answer_photo(message.photo[0].file_id)
+    await message.answer_photo(message.photo[0].file_id)  # type: ignore
 
 
 @get_feedback_router.message(F.video)
 async def msg_video_feedback(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    await message.answer_video(message.video.file_id)
+    await message.answer_video(message.video.file_id)  # type: ignore
