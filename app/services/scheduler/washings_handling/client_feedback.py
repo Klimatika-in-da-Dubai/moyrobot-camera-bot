@@ -17,7 +17,7 @@ from app.services.client_database.models.user import User
 from app.services.client_database.models.washing import Washing
 
 
-async def create_get_client_feedback_jobs(
+async def create_send_feedback_request_jobs(
     scheduler: AsyncIOScheduler,
     bot: Bot,
     washings: list[Washing],
@@ -33,7 +33,7 @@ async def create_get_client_feedback_jobs(
             )
             state = FSMContext(state_storage, key=create_storage_key(bot, user))
             scheduler.add_job(
-                func=get_client_feedback,
+                func=send_client_feedback_request,
                 trigger="date",
                 run_date=date,
                 args=(bot, user, washing, session, state),
@@ -49,7 +49,7 @@ def generate_datetime(
     return since + timedelta(seconds=random.randint(start, end))
 
 
-async def get_client_feedback(
+async def send_client_feedback_request(
     bot: Bot,
     client: User,
     washing: Washing,
@@ -92,18 +92,16 @@ async def send_feedback_request_message(
     question: Question,
     state: FSMContext,
 ):
-    print(question)
     text = (
-        f"Доброго времени суток, {user.first_name}! Вы недавно посещали МойРобот.\n"
-        "Ответьте пожалуйста на наш вопрос. Мы будем очень благодарны ;)\n"
-        "Если отвечать не хотите, просто проигнорируйте это сообщение\n"
-        "Вопрос:\n"
+        f" Вы недавно посещали МойРобот.\n"
+        "Ответьте пожалуйста на наш вопрос.\n"
+        "Мы будем очень благодарны ;)\n"
+        "Если отвечать не хотите, просто проигнорируйте это сообщение\n\n"
         f"{question.text}"
     )
     await state.set_state(GetFeedback.get_feedback)
     await state.update_data(feedback={"feedback_id": feedback.id})
     await bot.send_message(user.id, text=text)
-    ...
 
 
 def create_storage_key(bot: Bot, user: User) -> StorageKey:
