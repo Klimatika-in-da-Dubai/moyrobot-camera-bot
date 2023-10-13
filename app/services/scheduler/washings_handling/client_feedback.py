@@ -33,7 +33,7 @@ async def create_send_feedback_request_jobs(
             )
             state = FSMContext(state_storage, key=create_storage_key(bot, user))
             scheduler.add_job(
-                func=send_client_feedback_request,
+                func=send_feedback_request,
                 trigger="date",
                 run_date=date,
                 args=(bot, user, washing, session, state),
@@ -49,7 +49,7 @@ def generate_datetime(
     return since + timedelta(seconds=random.randint(start, end))
 
 
-async def send_client_feedback_request(
+async def send_feedback_request(
     bot: Bot,
     client: User,
     washing: Washing,

@@ -10,7 +10,7 @@ from app.services.client_database.models.user import User
 from app.services.client_database.models.washing import Washing
 from app.services.scheduler.washings_handling.client_feedback import (
     create_storage_key,
-    get_client_feedback,
+    send_client_feedback_request,
 )
 
 
@@ -40,4 +40,4 @@ async def test_feedback(
 
     key = create_storage_key(bot, user)
     new_state = FSMContext(storage=state.storage, key=key)
-    await get_client_feedback(bot, user, washing, session, new_state)
+    await send_client_feedback_request(bot, user, washing, session, new_state)

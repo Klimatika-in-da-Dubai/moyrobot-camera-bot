@@ -8,7 +8,7 @@ from app.services.scheduler.washings_handling.bonus_notifiactions import (
     send_bonus_notifications,
 )
 from app.services.scheduler.washings_handling.client_feedback import (
-    create_get_client_feedback_jobs,
+    create_send_feedback_request_jobs,
 )
 from app.services.scheduler.washings_handling.update_bonuses import update_bonuses
 from app.services.scheduler.washings_handling.update_washings import update_washings
@@ -50,6 +50,6 @@ async def do_parser_work(
         new_washings = await filter_new_washings_with_bonuses(washings, session)
         await update_bonuses(new_washings, session)
         await send_bonus_notifications(bot, new_washings, session)
-        await create_get_client_feedback_jobs(
+        await create_send_feedback_request_jobs(
             scheduler, bot, new_washings, session, state_storage
         )
