@@ -7,7 +7,7 @@ from app.core.handlers import handlers_router
 from app.core.middlewares.camera_streams import CamerasStreamsMiddleware
 from app.core.middlewares.config import ConfigMiddleware
 from app.core.middlewares.db import AddUserDbMiddleware, DbSessionMiddleware
-from app.core.middlewares.metrics import UsageMetricsMiddleware
+from app.core.middlewares.metrics import MessageModelMiddleware
 from app.services.cameras.camera_stream import CameraStream
 from app.services.client_database.connector import setup_get_pool
 from app.services.scheduler.scheduler import setup_scheduler
@@ -39,7 +39,7 @@ def setup_middlewares(
     dp.update.middleware(CamerasStreamsMiddleware(cameras))
 
     dp.message.middleware(AddUserDbMiddleware(sessionmaker))
-    dp.message.middleware(UsageMetricsMiddleware(sessionmaker))
+    dp.message.middleware(MessageModelMiddleware(sessionmaker))
 
 
 def setup_terminal_sessions(config: Config) -> list[TerminalSession]:

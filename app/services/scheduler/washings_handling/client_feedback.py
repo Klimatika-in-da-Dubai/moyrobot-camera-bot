@@ -28,6 +28,11 @@ async def create_send_feedback_request_jobs(
     for washing in washings:
         users: list[User] = await userdao.get_users_by_phone(washing.phone)
         for user in users:
+            last_visit = await userdao.get_user_last_visit_datetime(user, washing.date)
+
+            if last_visit and datetime.now() - last_visit < timedelta(days=14):
+                continue
+
             date = generate_datetime(
                 datetime.now(), timedelta(minutes=30), timedelta(days=1)
             )
@@ -58,8 +63,8 @@ async def send_feedback_request(
 ):
     try:
         question = await get_random_question(session)
-    except IndexError:
-        logging.error("No question was chosen")
+    except IndexError as e:
+        logging.error("No question was chosen %r", e)
         return
     feedback = await create_feedback(client, question, washing, session)
     await send_feedback_request_message(bot, client, feedback, question, state)
@@ -81,7 +86,7 @@ async def create_feedback(
     user: User, question: Question, washing: Washing, session: AsyncSession
 ) -> Feedback:
     feedback = Feedback(user_id=user.id, question_id=question.id, washing_id=washing.id)
-    await FeedbackDAO(session).add(feedback)
+    feedback = await FeedbackDAO(session).add(feedback)
     return feedback
 
 
@@ -93,14 +98,13 @@ async def send_feedback_request_message(
     state: FSMContext,
 ):
     text = (
-        f" Вы недавно посещали МойРобот.\n"
-        "Ответьте пожалуйста на наш вопрос.\n"
-        "Мы будем очень благодарны ;)\n"
-        "Если отвечать не хотите, просто проигнорируйте это сообщение\n\n"
+        f"Вы недавно посещали МойРобот!\n"
+        "Ответьте пожалуйста на наш вопрос, мы будем очень благодарны ;)\n"
+        "Вы также можете прикрепить фото и видео, но не больше 10\n"
         f"{question.text}"
     )
     await state.set_state(GetFeedback.get_feedback)
-    await state.update_data(feedback={"feedback_id": feedback.id})
+    await state.update_data(feedback={"id": feedback.id})
     await bot.send_message(user.id, text=text)
 
 
