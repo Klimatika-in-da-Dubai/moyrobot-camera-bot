@@ -4,7 +4,6 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.keyboards.menu import (
     GET_BONUSES_BUTTON_TEXT,
@@ -34,9 +33,7 @@ async def cmd_start(message: Message, session: AsyncSession):
     """/start command handling. Adds new user to client_database finish states"""
 
     userdao = UserDAO(session=session)
-    user = await userdao.get_by_id(message.chat.id)
-    if user is None:
-        raise ValueError("Command start. User should not be None")
+    user: User = await userdao.get_by_id(message.chat.id)
 
     text = (
         "Добрый день.\n\nВас приветствует МойРобот."
@@ -75,11 +72,7 @@ async def msg_get_bonuses(
     await state.clear()
     userdao = UserDAO(session=session)
 
-    user: Optional[User] = await userdao.get_by_id(message.chat.id)
-
-    if user is None:
-        await message.answer("Перезапустите пожалуйста бота /start")
-        return
+    user: User = await userdao.get_by_id(message.chat.id)
 
     if user.phone is None:
         await msg_phone(message, state)
@@ -134,17 +127,3 @@ async def cmd_deprecated_photo_commands(message: Message):
         "Данная команда больше не работает :(\nВы можете посмотреть очередь через меню",
         reply_markup=get_menu_reply_keyboard(),
     )
-
-
-@router.message(Command(commands=["stats"]))
-async def cmd_stats(message: Message, session: AsyncSession):
-    """
-    Send table from view daily_usage
-
-    """
-    query = text("SELECT * FROM daily_usage LIMIT 12;")
-    result = await session.execute(query)
-    message_text = ""
-    for row in result:
-        message_text += f"{row[0]}\t{row[1]}\n"
-    await message.answer(message_text)
