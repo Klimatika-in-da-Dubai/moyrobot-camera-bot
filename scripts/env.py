@@ -22,7 +22,6 @@ from app.services.client_database.base import Base
 from app.services.client_database.models.user import *
 from app.services.client_database.models.role import *
 from app.services.client_database.models.permissions import *
-from app.services.client_database.models.command_usage import *
 from app.services.client_database.models.client_bonus import *
 from app.services.client_database.models.washing import *
 from app.services.client_database.models.question import *
