@@ -7,7 +7,7 @@ from app.core.handlers import handlers_router
 from app.core.middlewares.camera_streams import CamerasStreamsMiddleware
 from app.core.middlewares.config import ConfigMiddleware
 from app.core.middlewares.db import AddUserDbMiddleware, DbSessionMiddleware
-from app.core.middlewares.metrics import UsageMetricsMiddleware
+from app.core.middlewares.metrics import MessageModelMiddleware
 from app.services.cameras.camera_stream import CameraStream
 from app.services.client_database.connector import setup_get_pool
 from app.services.scheduler.scheduler import setup_scheduler
@@ -39,7 +39,7 @@ def setup_middlewares(
     dp.update.middleware(CamerasStreamsMiddleware(cameras))
 
     dp.message.middleware(AddUserDbMiddleware(sessionmaker))
-    dp.message.middleware(UsageMetricsMiddleware(sessionmaker))
+    dp.message.middleware(MessageModelMiddleware(sessionmaker))
 
 
 def setup_terminal_sessions(config: Config) -> list[TerminalSession]:
@@ -69,14 +69,15 @@ def get_cameras(config: Config) -> list[CameraStream]:
 async def main():
     config: Config = load_config()
     bot = Bot(config.bot.token, parse_mode=config.bot.parse_mode)
+    storage = RedisStorage.from_url(config.redis.url)
+    dp = Dispatcher(storage=storage)
+
     sessionmaker = await setup_get_pool(config.db.uri)
     terminal_sessions = setup_terminal_sessions(config)
-    dp = Dispatcher(storage=RedisStorage.from_url(config.redis.url))
     cameras = get_cameras(config)
-
     setup_routers(dp)
     setup_middlewares(dp, sessionmaker, config, cameras)
-    scheduler = setup_scheduler(bot, terminal_sessions, sessionmaker)
+    scheduler = setup_scheduler(bot, terminal_sessions, sessionmaker, storage)
     try:
         scheduler.start()
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())

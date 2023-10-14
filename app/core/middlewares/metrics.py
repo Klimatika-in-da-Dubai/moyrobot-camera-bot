@@ -3,15 +3,14 @@ from typing import Callable, Awaitable, Dict, Any
 
 from aiogram.types import Message, TelegramObject
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from app.services.client_database.dao.command_usage import CommandUsageDAO
+from app.services.client_database.dao.message import MessageDAO
+from app.utils.message import create_message_model, get_message_attached_file
 
-from app.services.client_database.models.command_usage import CommandUsage
 
-
-class UsageMetricsMiddleware(BaseMiddleware):
-    def __init__(self, session: async_sessionmaker) -> None:
+class MessageModelMiddleware(BaseMiddleware):
+    def __init__(self, session_pool: async_sessionmaker) -> None:
         super().__init__()
-        self.session_pool = session
+        self.session_pool = session_pool
 
     async def __call__(
         self,
@@ -19,13 +18,13 @@ class UsageMetricsMiddleware(BaseMiddleware):
         message: Message,
         data: Dict[str, Any],
     ) -> Any:
-        if message.text:
-            await self.insert_command_usage_metric(message)
-        return await handler(message, data)
+        message_model = create_message_model(message)
 
-    async def insert_command_usage_metric(self, message: Message) -> None:
-        command_usage = CommandUsage(user_id=message.from_user.id, command=message.text)  # type: ignore
-
+        attached_file = get_message_attached_file(message)
         async with self.session_pool() as session:
-            dao = CommandUsageDAO(session)
-            await dao.add_command_usage(command_usage)
+            messagedao = MessageDAO(session)
+            await messagedao.add(message_model)
+            if attached_file is not None:
+                await messagedao.attach_file(message_model, attached_file)
+
+        return await handler(message, data)

@@ -41,6 +41,8 @@ class AddUserDbMiddleware(BaseMiddleware):
         user = get_user_from_message(event)
         async with self.session_pool() as session:
             userdao = UserDAO(session=session)
-            if await userdao.get_by_id(user.id) is None:
+            try:
+                await userdao.get_by_id(user.id)
+            except Exception:
                 await userdao.add_user(user)
         return await handler(event, data)

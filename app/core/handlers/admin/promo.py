@@ -14,13 +14,13 @@ from app.core.utils.send_promo import get_mailing_type, MailingType
 
 from app.services.client_database.dao.user import UserDAO
 
-send_promo_router = Router()
+promo_router = Router()
 
 
 SENDING_PROMO_DELAY = 0.04  # 40 milliseconds
 
 
-@send_promo_router.message(Command(commands=["promo"]))
+@promo_router.message(Command(commands=["promo"]))
 async def cmb_promo(
     message: Message,
     state: FSMContext,
@@ -34,7 +34,7 @@ async def cmb_promo(
     )
 
 
-@send_promo_router.callback_query(SendPromo.text_promo_message, CancelCB.filter())
+@promo_router.callback_query(SendPromo.text_promo_message, CancelCB.filter())
 async def cancel_text_promo(cb: CallbackQuery, state: FSMContext):
     """
     Handling user press cancel button
@@ -44,7 +44,7 @@ async def cancel_text_promo(cb: CallbackQuery, state: FSMContext):
     await cb.message.delete()  # pyright: ignore
 
 
-@send_promo_router.message(SendPromo.text_promo_message, F.text)
+@promo_router.message(SendPromo.text_promo_message, F.text)
 async def get_promo_text(message: Message, state: FSMContext):
     """
     Handling getting promo text
@@ -63,7 +63,7 @@ async def get_promo_text(message: Message, state: FSMContext):
     )
 
 
-@send_promo_router.message(SendPromo.text_promo_message, F.photo)
+@promo_router.message(SendPromo.text_promo_message, F.photo)
 async def get_promo_photo(message: Message, state: FSMContext):
     """
     Handling getting promo with caption
@@ -84,7 +84,7 @@ async def get_promo_photo(message: Message, state: FSMContext):
     )
 
 
-@send_promo_router.callback_query(
+@promo_router.callback_query(
     SendPromo.send_promo_message, YesNoCB.filter(F.choice == YesNoChoice.YES)
 )
 async def yes_promo_send(
@@ -158,7 +158,7 @@ async def start_photo_mailing(bot: Bot, session: AsyncSession, state: FSMContext
         await asyncio.sleep(SENDING_PROMO_DELAY)
 
 
-@send_promo_router.callback_query(
+@promo_router.callback_query(
     SendPromo.send_promo_message, YesNoCB.filter(F.choice == YesNoChoice.NO)
 )
 async def no_promo_send(cb: CallbackQuery, state: FSMContext):
