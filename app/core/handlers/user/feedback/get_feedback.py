@@ -36,7 +36,7 @@ async def handle_feedback(
     await send_feedback_to_reviewers(feedback_id, session)
 
 
-@get_feedback_router.message(or_f(F.text, F.video, F.photo, F.media_group_id))
+@get_feedback_router.message(F.media_group_id)
 async def msg_album_feedback(
     message: Message,
     album: list[Message],
@@ -53,6 +53,23 @@ async def msg_album_feedback(
     for mes in album:
         await feedbackdao.attach_message_by_ids(feedback_id, mes.message_id)
 
+    await send_feedback_to_reviewers(feedback_id, session)
+
+
+@get_feedback_router.message(or_f(F.text, F.video, F.photo))
+async def msg_feedback(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession,
+):
+    """This handler will receive a complete album of any type."""
+    await message.answer("Спасибо, что оставили отзыв!")
+    feedback_id = await get_feedback_id_from_state(state)
+    await state.clear()
+    assert feedback_id is not None
+
+    feedbackdao = FeedbackDAO(session)
+    await feedbackdao.attach_message_by_ids(feedback_id, message.message_id)
     await send_feedback_to_reviewers(feedback_id, session)
 
 
