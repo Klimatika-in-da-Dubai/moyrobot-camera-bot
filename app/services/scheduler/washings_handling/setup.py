@@ -45,11 +45,11 @@ async def do_parser_work(
     parser = WashingsParser(terminal_sessions)
     washings = await parser.get_washings()
     async with sessionmaker() as session:
-        await update_washings(washings, session)
-
         new_washings = await filter_new_washings_with_bonuses(washings, session)
         await update_bonuses(new_washings, session)
         await send_bonus_notifications(bot, new_washings, session)
         await create_send_feedback_request_jobs(
             scheduler, bot, new_washings, session, state_storage
         )
+
+        await update_washings(washings, session)
