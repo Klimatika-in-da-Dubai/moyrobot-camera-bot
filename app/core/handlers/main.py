@@ -81,7 +81,7 @@ async def msg_get_bonuses(
     clientbonusdao = ClientBonusDAO(session=session)
     clientbonus: Optional[ClientBonus] = await clientbonusdao.get_by_phone(user.phone)
     if clientbonus is None:
-        clientbonus = ClientBonus(user.phone)
+        clientbonus = ClientBonus(phone=user.phone)
         await clientbonusdao.add(clientbonus)
 
     await message.answer(
