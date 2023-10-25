@@ -12,3 +12,4 @@ class GetPhone(StatesGroup):
 
 class GetFeedback(StatesGroup):
     get_feedback = State()
+    get_measurable_feedback = State()

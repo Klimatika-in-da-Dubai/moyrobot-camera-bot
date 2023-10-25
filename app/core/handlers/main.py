@@ -11,6 +11,7 @@ from app.core.keyboards.menu import (
     PHONE_BUTTON_TEXT,
     SEE_QUEUE_BUTTON_TEXT,
     get_menu_reply_keyboard,
+    get_user_menu_reply_keyboard,
 )
 from app.core.states.states import GetPhone
 from app.services.cameras.camera_stream import (
@@ -32,12 +33,9 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message, session: AsyncSession):
+async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     """/start command handling. Adds new user to client_database finish states"""
-
-    userdao = UserDAO(session=session)
-    user: User = await userdao.get_by_id(message.chat.id)
-
+    await state.clear()
     text = (
         "Добрый день.\n\nВас приветствует МойРобот."
         "С моей помощью вы сможете увидеть очередь на мойку.\n\n"
@@ -45,7 +43,7 @@ async def cmd_start(message: Message, session: AsyncSession):
     await message.answer(
         text,
         parse_mode=ParseMode.HTML,
-        reply_markup=get_menu_reply_keyboard(user.phone),
+        reply_markup=await get_user_menu_reply_keyboard(message.chat.id, session),
     )
 
 

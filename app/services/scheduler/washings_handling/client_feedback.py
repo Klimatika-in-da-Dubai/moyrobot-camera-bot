@@ -7,12 +7,17 @@ from aiogram.fsm.storage.base import BaseStorage, StorageKey
 from apscheduler.executors.base import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.keyboards.measurable_category import get_measurable_category_keyboard
 from app.core.states.states import GetFeedback
 from app.services.client_database.dao.feedback import FeedbackDAO
 from app.services.client_database.dao.question import QuestionDAO
 from app.services.client_database.dao.user import UserDAO
 from app.services.client_database.models.feedback import Feedback
-from app.services.client_database.models.question import Category, Question
+from app.services.client_database.models.question import (
+    MEASURABLE_CATEGORY,
+    Category,
+    Question,
+)
 from app.services.client_database.models.user import User
 from app.services.client_database.models.washing import Washing
 
@@ -28,11 +33,6 @@ async def create_send_feedback_request_jobs(
     for washing in washings:
         users: list[User] = await userdao.get_users_by_phone(washing.phone)
         for user in users:
-            last_visit = await userdao.get_user_last_visit_datetime(user, washing.date)
-
-            if last_visit and datetime.now() - last_visit < timedelta(days=14):
-                continue
-
             date = generate_datetime(
                 datetime.now(), timedelta(minutes=30), timedelta(days=1)
             )
@@ -67,7 +67,7 @@ async def send_feedback_request(
         logging.error("No question was chosen %r", e)
         return
     feedback = await create_feedback(client, question, washing, session)
-    await send_feedback_request_message(bot, client, feedback, question, state)
+    await send_feedback_request_message(bot, client, feedback, question, state, session)
 
 
 async def get_random_question(
@@ -96,13 +96,52 @@ async def send_feedback_request_message(
     feedback: Feedback,
     question: Question,
     state: FSMContext,
+    session: AsyncSession,
+):
+    questiondao = QuestionDAO(session)
+    categories = await questiondao.get_question_categories(question.id)
+    categories_names = [c.name for c in categories]
+    match categories:
+        case _ if MEASURABLE_CATEGORY in categories_names:
+            await send_measurable_feedback_request(bot, user, feedback, question, state)
+        case _:
+            await send_default_feedback_request(bot, user, feedback, question, state)
+
+
+async def send_measurable_feedback_request(
+    bot: Bot,
+    user: User,
+    feedback: Feedback,
+    question: Question,
+    state: FSMContext,
 ):
     text = (
-        f"Вы недавно посещали МойРобот!\n"
+        "Вы недавно посещали МойРобот!\n"
+        "Ответьте пожалуйста на наш вопрос, мы будем очень благодарны ;)\n"
+        f"{question.text}"
+    )
+
+    await state.set_state(GetFeedback.get_measurable_feedback)
+    await state.update_data(feedback={"id": feedback.id})
+    await bot.send_message(
+        user.id, text=text, reply_markup=get_measurable_category_keyboard()
+    )
+
+
+async def send_default_feedback_request(
+    bot: Bot,
+    user: User,
+    feedback: Feedback,
+    question: Question,
+    state: FSMContext,
+):
+    text = (
+        "Вы недавно посещали МойРобот!\n"
         "Ответьте пожалуйста на наш вопрос, мы будем очень благодарны ;)\n"
         "Вы также можете прикрепить фото и видео, но не больше 10\n"
         f"{question.text}"
     )
+
     await state.set_state(GetFeedback.get_feedback)
     await state.update_data(feedback={"id": feedback.id})
     await bot.send_message(user.id, text=text)
