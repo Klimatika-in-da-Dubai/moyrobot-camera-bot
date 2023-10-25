@@ -1,5 +1,6 @@
+import random
 from typing import Optional
-from aiogram import F, Bot, Router
+from aiogram import F, Bot, Router, html
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -17,9 +18,11 @@ from app.services.cameras.camera_stream import (
     get_input_media_photo_to_send,
 )
 from app.services.client_database.dao.client_bonus import ClientBonusDAO
+from app.services.client_database.dao.promocode import PromocodeDAO
 
 from app.services.client_database.dao.user import UserDAO
 from app.services.client_database.models.client_bonus import ClientBonus
+from app.services.client_database.models.promocode import PromocodeType
 from app.services.client_database.models.user import User
 from app.settings.config import Config
 from app.utils.phone import format_phone, is_phone_correct, phone_to_text
@@ -106,9 +109,15 @@ async def msg_get_phone(message: Message, state: FSMContext, session: AsyncSessi
     if not is_phone_correct(text):
         await message.answer("Некорретный номер телефона")
         return
+
     phone = phone_to_text(text)
 
     userdao = UserDAO(session)
+    user = await userdao.get_by_id(message.chat.id)
+
+    if user.phone is None:
+        await send_registration_promocode(message, session)
+
     await userdao.add_phone(message.chat.id, phone)
 
     clientbonusdao = ClientBonusDAO(session)
@@ -118,7 +127,22 @@ async def msg_get_phone(message: Message, state: FSMContext, session: AsyncSessi
         f"Вы сменили номер телефона!\n" f"Новый номер: {format_phone(phone)}",
         reply_markup=get_menu_reply_keyboard(phone),
     )
+
     await state.clear()
+
+
+async def send_registration_promocode(message: Message, session: AsyncSession):
+    promocodedao = PromocodeDAO(session)
+    promocodes = await promocodedao.get_active_promocodes(
+        type=PromocodeType.REGISTRATION
+    )
+    if not promocodes:
+        return
+    promocode = random.choice(promocodes)
+    code = str(promocode.code)
+    await message.answer(
+        f"Промокод на скидку в 10% за регистрацию в боте: {html.bold(code)}"
+    )
 
 
 @router.message(Command(commands=["queue", "photo"]))
