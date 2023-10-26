@@ -34,7 +34,7 @@ async def create_send_feedback_request_jobs(
         users: list[User] = await userdao.get_users_by_phone(washing.phone)
         for user in users:
             date = generate_datetime(
-                datetime.now(), timedelta(minutes=30), timedelta(days=1)
+                datetime.now(), timedelta(minutes=15), timedelta(hours=1)
             )
             state = FSMContext(state_storage, key=create_storage_key(bot, user))
             scheduler.add_job(

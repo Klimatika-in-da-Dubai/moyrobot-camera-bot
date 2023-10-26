@@ -140,7 +140,8 @@ async def send_registration_promocode(message: Message, session: AsyncSession):
     promocode = random.choice(promocodes)
     code = str(promocode.code)
     await message.answer(
-        f"Промокод на скидку в 10% за регистрацию в боте: {html.bold(code)}"
+        f"Спасибо, что зарегистрировались! 🥳\n\n"
+        f"Не могу оставить вас без подарка, лови промокод на скидку 10% до конца декабря - {html.bold(code)}"
     )
 
 
