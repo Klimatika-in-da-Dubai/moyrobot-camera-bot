@@ -8,7 +8,7 @@ from app.services.client_database.dao.user import UserDAO
 
 from app.services.client_database.models.feedback import Feedback
 from app.services.client_database.models.message import Message
-from app.services.client_database.models.question import Question
+from app.services.client_database.models.question import MEASURABLE_CATEGORY, Question
 from app.services.client_database.models.user import User
 
 
@@ -55,9 +55,13 @@ async def send_feedback_message(
     question: Question = await questiondao.get_by_id(feedback.question_id)
     messages: list[Message] = await feedbackdao.get_feedback_messages(feedback_id)
 
-    text = (
-        "Получен отзыв от клиента!\n"
-        f"Вопрос: {question.text}\n"
-        f"Ответ: {messages[0].text}"
-    )
+    categories = [
+        c.name for c in await questiondao.get_question_categories(question.id)
+    ]
+    if MEASURABLE_CATEGORY in categories:
+        mark = int(messages[0].text)
+        answer = "⭐" * mark
+    else:
+        answer = messages[0].text
+    text = "Получен отзыв от клиента!\n" f"Вопрос: {question.text}\n" f"Ответ: {answer}"
     await bot.send_message(user.id, text)

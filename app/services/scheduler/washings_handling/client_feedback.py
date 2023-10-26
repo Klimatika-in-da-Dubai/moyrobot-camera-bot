@@ -101,7 +101,7 @@ async def send_feedback_request_message(
     questiondao = QuestionDAO(session)
     categories = await questiondao.get_question_categories(question.id)
     categories_names = [c.name for c in categories]
-    match categories:
+    match categories_names:
         case _ if MEASURABLE_CATEGORY in categories_names:
             await send_measurable_feedback_request(bot, user, feedback, question, state)
         case _:
