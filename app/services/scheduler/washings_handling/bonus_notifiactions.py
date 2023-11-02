@@ -24,12 +24,21 @@ async def send_bonus_notifications(
 
         if bonus_balance is None:
             continue
+        if washing.bonuses is None:
+            continue
 
-        text = (
-            "Начисление бонусов за мойку!\n"
-            f"Количество: {washing.bonuses}\n"
-            f"Текущий баланс: {bonus_balance.actual_amount}\n"
-        )
+        if washing.bonuses > 0:
+            text = (
+                "Начисление бонусов за мойку!\n"
+                f"Количество: {washing.bonuses}\n"
+                f"Текущий баланс: {bonus_balance.actual_amount}\n"
+            )
+        else:
+            text = (
+                "Списание бонусов!\n"
+                f"Количество: {washing.bonuses}\n"
+                f"Текущий баланс: {bonus_balance.actual_amount}\n"
+            )
 
         for user in users:
             try:
