@@ -14,8 +14,8 @@ from app.services.client_database.dao.question import QuestionDAO
 from app.services.client_database.dao.user import UserDAO
 from app.services.client_database.models.feedback import Feedback
 from app.services.client_database.models.question import (
-    MEASURABLE_CATEGORY,
     Category,
+    CategoryEnum,
     Question,
 )
 from app.services.client_database.models.user import User
@@ -102,7 +102,7 @@ async def send_feedback_request_message(
     categories = await questiondao.get_question_categories(question.id)
     categories_names = [c.name for c in categories]
     match categories_names:
-        case _ if MEASURABLE_CATEGORY in categories_names:
+        case _ if CategoryEnum.MEASURABLE_CATEGORY in categories_names:
             await send_measurable_feedback_request(bot, user, feedback, question, state)
         case _:
             await send_default_feedback_request(bot, user, feedback, question, state)

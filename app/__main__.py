@@ -8,6 +8,7 @@ from app.core.middlewares.camera_streams import CamerasStreamsMiddleware
 from app.core.middlewares.config import ConfigMiddleware
 from app.core.middlewares.db import AddUserDbMiddleware, DbSessionMiddleware
 from app.core.middlewares.metrics import MessageModelMiddleware
+from app.core.middlewares.terminal_session import TerminalSesssionMiddleware
 from app.services.cameras.camera_stream import CameraStream
 from app.services.client_database.connector import setup_get_pool
 from app.services.scheduler.scheduler import setup_scheduler
@@ -33,10 +34,12 @@ def setup_middlewares(
     sessionmaker: async_sessionmaker,
     config: Config,
     cameras: list[CameraStream],
+    terminal_session: TerminalSession,
 ):
     dp.update.middleware(DbSessionMiddleware(sessionmaker))
     dp.update.middleware(ConfigMiddleware(config))
     dp.update.middleware(CamerasStreamsMiddleware(cameras))
+    dp.update.middleware(TerminalSesssionMiddleware(terminal_session))
 
     dp.message.middleware(AddUserDbMiddleware(sessionmaker))
     dp.message.middleware(MessageModelMiddleware(sessionmaker))
@@ -76,7 +79,7 @@ async def main():
     terminal_sessions = setup_terminal_sessions(config)
     cameras = get_cameras(config)
     setup_routers(dp)
-    setup_middlewares(dp, sessionmaker, config, cameras)
+    setup_middlewares(dp, sessionmaker, config, cameras, terminal_sessions[0])
     scheduler = setup_scheduler(bot, terminal_sessions, sessionmaker, storage)
     try:
         scheduler.start()
