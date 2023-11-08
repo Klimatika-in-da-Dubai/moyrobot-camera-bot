@@ -2,7 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 
-CLOSE_CONVERSATION_BUTTON_TEXT = "Закрыть беседу о отзыве"
+CLOSE_CONVERSATION_BUTTON_TEXT = "Прекратить беседу с клиентом"
 
 
 def get_close_conversation_keyboard() -> ReplyKeyboardMarkup:

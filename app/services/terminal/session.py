@@ -1,5 +1,12 @@
+import json
 import aiohttp
 import logging
+
+from app.services.client_database.utils.phone import (
+    format_phone,
+    is_phone_correct,
+    phone_to_text,
+)
 
 
 class TerminalSession:
@@ -20,6 +27,10 @@ class TerminalSession:
         self.__password = password
         self.__login_url = url + "/Account/Login"
         self.__table_sales_url = url + "/Admin/_TableSales"
+        self.__bonus_create_url = (
+            url
+            + "/Modules/ModulePartial_Post?ModuleUrl=http://localhost:8083&ActionUrl=BonusChanges/Create"
+        )
         self.__cookie_jar = aiohttp.CookieJar()
         self._session = aiohttp.ClientSession(cookie_jar=self.__cookie_jar)
 
@@ -70,6 +81,43 @@ class TerminalSession:
                 self.url,
             )
             return await resp.text()
+
+    async def add_bonuses_by_phone(
+        self, phone: str, bonus_count: int, description: str
+    ):
+        id = await self.get_partner_id(phone)
+        data = {
+            "IdPartnerCore": f"{id}",
+            "BonusCount": f"{bonus_count}",
+            "Comment": description,
+        }
+
+        async with self._session.post(self.__bonus_create_url, data=data) as resp:
+            resp.raise_for_status()
+
+    async def get_partner_id(self, phone: str) -> int:
+        if not is_phone_correct(phone):
+            raise ValueError("Incorrect phone")
+
+        phone = format_phone(phone_to_text(phone))
+        url = self.get_partner_id_by_phone_url(phone)
+
+        async with self._session.get(url) as resp:
+            resp.raise_for_status()
+            data: dict = await resp.json()
+            partner_data = json.loads(data["Result"])
+
+            if not partner_data:
+                raise NoClientError("No partner with such phone")
+
+            return partner_data[0]["Partner"]["Id"]
+
+    def get_partner_id_by_phone_url(self, phone: str) -> str:
+        phone = phone.replace("+", "%2B")
+        return (
+            self.url + f"/Modules/GetPartnersByPhoneContains?Phone={phone}"
+            "&moduleName=%D0%91%D0%BE%D0%BD%D1%83%D1%81%D1%8B"
+        )
 
     async def create_promo(self):
         """
@@ -125,3 +173,7 @@ class TerminalSession:
             data=data,
         ) as resp:
             print(resp.raw_headers)
+
+
+class NoClientError(Exception):
+    ...
