@@ -1,13 +1,17 @@
 from collections.abc import Awaitable, Callable
 from aiogram import Bot, types
 from aiogram.fsm.context import FSMContext
+from aiogram.types.message import Message
 from apscheduler.executors.base import logging
 from apscheduler.schedulers.asyncio import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.keyboards.answer_feedback import get_answer_feedback_keyboard
 from app.services.client_database.dao.feedback import FeedbackDAO
+from app.services.client_database.dao.question import QuestionDAO
 from app.services.client_database.dao.user import UserDAO
 
 from app.services.client_database.models.feedback import Feedback
+from app.services.client_database.models.question import Question
 from app.services.client_database.models.role import PermissionEnum
 from app.services.client_database.models.user import User
 
@@ -58,3 +62,25 @@ async def send_feedback_to_reviewers(
             logging.error(e)
 
         await asyncio.sleep(SEND_FEEDBACK_DELAY)
+
+
+async def send_text_feedback(
+    bot: Bot, user: User, feedback_id: int, session: AsyncSession
+) -> Message:
+    feedbackdao = FeedbackDAO(session)
+    questiondao = QuestionDAO(session)
+    userdao = UserDAO(session)
+    feedback: Feedback = await feedbackdao.get_by_id(feedback_id)
+    question: Question = await questiondao.get_by_id(feedback.question_id)
+    messages: list = await feedbackdao.get_feedback_messages(feedback_id)
+    text = (
+        "Получен отзыв от клиента!\n"
+        f"Вопрос: {question.text}\n"
+        f"Ответ: {messages[0].text}"
+    )
+
+    reply_markup = None
+    if await userdao.is_user_have_permission(user.id, PermissionEnum.ANSWER_FEEDBACK):
+        reply_markup = get_answer_feedback_keyboard(feedback.id)
+
+    return await bot.send_message(user.id, text, reply_markup=reply_markup)

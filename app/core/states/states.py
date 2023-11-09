@@ -13,6 +13,7 @@ class GetPhone(StatesGroup):
 class GetFeedback(StatesGroup):
     get_feedback = State()
     get_measurable_feedback = State()
+    get_yes_no_feedback = State()
 
 
 class Client(StatesGroup):

@@ -8,6 +8,7 @@ from app.core.handlers.user.feedback.utils import (
     send_feedback_to_reviewers,
 )
 import re
+from app.core.keyboards.measurable_category import get_measurable_category_keyboard
 from app.core.keyboards.menu import get_user_menu_reply_keyboard
 
 from app.core.states.states import GetFeedback
@@ -39,7 +40,10 @@ async def msg_measurable_feedback(
     """This handler will receive a complete album of any type."""
     assert message.text is not None
     if not pattern.match(message.text):
-        await message.answer("Выберите рейтинг из клавиатуры!")
+        await message.answer(
+            "Выберите рейтинг из клавиатуры!",
+            reply_markup=get_measurable_category_keyboard(),
+        )
         return
 
     await message.answer(
@@ -62,7 +66,7 @@ async def msg_measurable_feedback(
 
     if (
         await feedbackdao.is_feedback_question_have_category(
-            feedback_id, CategoryEnum.WASHING_CATEGORY
+            feedback_id, CategoryEnum.WASHING
         )
         and int(mark) <= 3
     ):
@@ -95,7 +99,7 @@ async def send_bonuses_for_bad_serivce(
 ):
     client_id = message.chat.id
     if await is_client_already_sent_before_bad_feedback(
-        client_id, feedback_id, CategoryEnum.WASHING_CATEGORY, session
+        client_id, feedback_id, CategoryEnum.WASHING, session
     ):
         return
 

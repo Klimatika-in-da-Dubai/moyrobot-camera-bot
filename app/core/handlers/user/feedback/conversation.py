@@ -24,7 +24,7 @@ async def msg_album_feedback(
     """This handler will receive a complete album of any type."""
 
     reviewer_id = await feedback_conversation.get_reviewer_id()
-    caption = album[0].caption or ""
+    caption = message.caption or ""
     mediabuilder = MediaGroupBuilder(caption=caption)
     for mes in album:
         match mes.content_type:
