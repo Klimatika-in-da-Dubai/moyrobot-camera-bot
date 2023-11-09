@@ -8,13 +8,13 @@ from apscheduler.executors.base import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.keyboards.measurable_category import get_measurable_category_keyboard
+from app.core.keyboards.yes_no import get_yes_no_reply_ketboard
 from app.core.states.states import GetFeedback
 from app.services.client_database.dao.feedback import FeedbackDAO
 from app.services.client_database.dao.question import QuestionDAO
 from app.services.client_database.dao.user import UserDAO
 from app.services.client_database.models.feedback import Feedback
 from app.services.client_database.models.question import (
-    Category,
     CategoryEnum,
     Question,
 )
@@ -71,14 +71,10 @@ async def send_feedback_request(
 
 
 async def get_random_question(
-    session: AsyncSession, category: Optional[Category] = None
+    session: AsyncSession, category: Optional[CategoryEnum] = None
 ) -> Optional[Question]:
     questiondao = QuestionDAO(session)
-
-    if category is None:
-        questions = await questiondao.get_all()
-    else:
-        questions = await questiondao.get_questions_by_category_id(category.id)
+    questions = await questiondao.get_active_questions(category)
     return random.choice(questions)
 
 
@@ -102,8 +98,10 @@ async def send_feedback_request_message(
     categories = await questiondao.get_question_categories(question.id)
     categories_names = [c.name for c in categories]
     match categories_names:
-        case _ if CategoryEnum.MEASURABLE_CATEGORY in categories_names:
+        case _ if CategoryEnum.MEASURABLE in categories_names:
             await send_measurable_feedback_request(bot, user, feedback, question, state)
+        case _ if CategoryEnum.YES_NO in categories_names:
+            await send_yes_no_feedback_request(bot, user, feedback, question, state)
         case _:
             await send_default_feedback_request(bot, user, feedback, question, state)
 
@@ -126,6 +124,24 @@ async def send_measurable_feedback_request(
     await bot.send_message(
         user.id, text=text, reply_markup=get_measurable_category_keyboard()
     )
+
+
+async def send_yes_no_feedback_request(
+    bot: Bot,
+    user: User,
+    feedback: Feedback,
+    question: Question,
+    state: FSMContext,
+):
+    text = (
+        "Вы недавно посещали МойРобот!\n"
+        "Ответьте пожалуйста на наш вопрос, мы будем очень благодарны ;)\n"
+        f"{question.text}"
+    )
+
+    await state.set_state(GetFeedback.get_yes_no_feedback)
+    await state.update_data(feedback={"id": feedback.id})
+    await bot.send_message(user.id, text=text, reply_markup=get_yes_no_reply_ketboard())
 
 
 async def send_default_feedback_request(

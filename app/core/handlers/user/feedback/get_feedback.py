@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.handlers.user.feedback.utils import (
     get_feedback_id_from_state,
     send_feedback_to_reviewers,
+    send_text_feedback,
 )
 from app.core.keyboards.answer_feedback import get_answer_feedback_keyboard
 from app.core.keyboards.menu import get_user_menu_reply_keyboard
@@ -35,7 +36,6 @@ get_feedback_router.message.middleware(MediaGroupMiddleware())
 async def msg_feedback(
     message: Message, state: FSMContext, session: AsyncSession, bot: Bot
 ):
-    """This handler will receive a complete album of any type."""
     await message.answer(
         "Спасибо, что оставили отзыв!",
         reply_markup=await get_user_menu_reply_keyboard(message.chat.id, session),
@@ -49,33 +49,10 @@ async def msg_feedback(
     await send_feedback_to_reviewers(bot, feedback_id, session, send_text_feedback)
 
 
-async def send_text_feedback(
-    bot: Bot, user: User, feedback_id: int, session: AsyncSession
-) -> Message:
-    feedbackdao = FeedbackDAO(session)
-    questiondao = QuestionDAO(session)
-    userdao = UserDAO(session)
-    feedback: Feedback = await feedbackdao.get_by_id(feedback_id)
-    question: Question = await questiondao.get_by_id(feedback.question_id)
-    messages: list = await feedbackdao.get_feedback_messages(feedback_id)
-    text = (
-        "Получен отзыв от клиента!\n"
-        f"Вопрос: {question.text}\n"
-        f"Ответ: {messages[0].text}"
-    )
-
-    reply_markup = None
-    if await userdao.is_user_have_permission(user.id, PermissionEnum.ANSWER_FEEDBACK):
-        reply_markup = get_answer_feedback_keyboard(feedback.id)
-
-    return await bot.send_message(user.id, text, reply_markup=reply_markup)
-
-
 @get_feedback_router.message(or_f(F.video, F.photo))
 async def msg_with_attachment_feedback(
     message: Message, state: FSMContext, session: AsyncSession, bot: Bot
 ):
-    """This handler will receive a complete album of any type."""
     await message.answer(
         "Спасибо, что оставили отзыв!",
         reply_markup=await get_user_menu_reply_keyboard(message.chat.id, session),
