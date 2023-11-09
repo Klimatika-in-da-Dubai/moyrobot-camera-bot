@@ -8,6 +8,7 @@ from app.core.handlers.user.feedback.utils import (
     send_feedback_to_reviewers,
 )
 import re
+from app.core.keyboards.answer_feedback import get_answer_feedback_keyboard
 from app.core.keyboards.measurable_category import get_measurable_category_keyboard
 from app.core.keyboards.menu import get_user_menu_reply_keyboard
 
@@ -18,6 +19,7 @@ from app.services.client_database.dao.question import QuestionDAO
 from app.services.client_database.dao.user import UserDAO
 from app.services.client_database.models.feedback import Feedback
 from app.services.client_database.models.question import CategoryEnum, Question
+from app.services.client_database.models.role import PermissionEnum
 from app.services.client_database.models.user import User
 from app.services.terminal.session import TerminalSession
 
@@ -80,6 +82,7 @@ async def send_measurable_feedback(
 ) -> Message:
     feedbackdao = FeedbackDAO(session)
     questiondao = QuestionDAO(session)
+    userdao = UserDAO(session)
     feedback: Feedback = await feedbackdao.get_by_id(feedback_id)
     question: Question = await questiondao.get_by_id(feedback.question_id)
     messages: list = await feedbackdao.get_feedback_messages(feedback_id)
@@ -88,7 +91,11 @@ async def send_measurable_feedback(
     text = (
         "Получен отзыв от клиента!\n" f"Вопрос: {question.text}\n" f"Ответ: {mark_text}"
     )
-    return await bot.send_message(user.id, text)
+    reply_markup = None
+    if await userdao.is_user_have_permission(user.id, PermissionEnum.ANSWER_FEEDBACK):
+        reply_markup = get_answer_feedback_keyboard(feedback.id)
+
+    return await bot.send_message(user.id, text, reply_markup=reply_markup)
 
 
 async def send_bonuses_for_bad_serivce(
