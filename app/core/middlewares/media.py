@@ -2,12 +2,13 @@ import asyncio
 from typing import Any, Awaitable, Callable, Dict, List, Union
 
 from aiogram import BaseMiddleware
+from aiogram.enums import InputMediaType
 from aiogram.types import (
     Message,
     TelegramObject,
 )
 
-from app.utils.message import get_message_attached_file
+from app.services.client_database import models
 
 DEFAULT_DELAY = 0.6
 
@@ -35,10 +36,15 @@ class MediaGroupMiddleware(BaseMiddleware):
             await asyncio.sleep(self.delay)
             data["album"] = self.ALBUM_DATA.pop(event.media_group_id)
 
-        attached_files = []
-        for message in data["album"]:
-            attached_files.append(get_message_attached_file(message))
-
-        data["files"] = attached_files
-
         return await handler(event, data)
+
+
+def create_file_model(message: Message) -> models.File:
+    if message.photo:
+        return models.File(
+            message.photo[-1].file_id, InputMediaType.PHOTO, message.caption
+        )
+    elif message.video:
+        return models.File(message.video.file_id, InputMediaType.VIDEO, message.caption)
+
+    raise ValueError("Can't create other file types")

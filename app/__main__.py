@@ -2,12 +2,14 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.core.handlers import handlers_router
 from app.core.middlewares.camera_streams import CamerasStreamsMiddleware
 from app.core.middlewares.config import ConfigMiddleware
 from app.core.middlewares.db import AddUserDbMiddleware, DbSessionMiddleware
 from app.core.middlewares.metrics import MessageModelMiddleware
+from app.core.middlewares.scheduler import SchedulerMiddleware
 from app.core.middlewares.terminal_session import TerminalSesssionMiddleware
 from app.services.cameras.camera_stream import CameraStream
 from app.services.client_database.connector import setup_get_pool
@@ -35,11 +37,13 @@ def setup_middlewares(
     config: Config,
     cameras: list[CameraStream],
     terminal_session: TerminalSession,
+    scheduler: AsyncIOScheduler,
 ):
     dp.update.middleware(DbSessionMiddleware(sessionmaker))
     dp.update.middleware(ConfigMiddleware(config))
     dp.update.middleware(CamerasStreamsMiddleware(cameras))
     dp.update.middleware(TerminalSesssionMiddleware(terminal_session))
+    dp.update.middleware(SchedulerMiddleware(scheduler))
 
     dp.message.middleware(AddUserDbMiddleware(sessionmaker))
     dp.message.middleware(MessageModelMiddleware(sessionmaker))
@@ -74,13 +78,25 @@ async def main():
     bot = Bot(config.bot.token, parse_mode=config.bot.parse_mode)
     storage = RedisStorage.from_url(config.redis.url)
     dp = Dispatcher(storage=storage)
+    scheduler = AsyncIOScheduler()
 
     sessionmaker = await setup_get_pool(config.db.uri)
     terminal_sessions = setup_terminal_sessions(config)
     cameras = get_cameras(config)
     setup_routers(dp)
-    setup_middlewares(dp, sessionmaker, config, cameras, terminal_sessions[0])
-    scheduler = setup_scheduler(bot, terminal_sessions, sessionmaker, storage)
+
+    setup_scheduler(
+        scheduler,
+        bot,
+        terminal_sessions,
+        sessionmaker,
+        storage,
+    )
+
+    setup_middlewares(
+        dp, sessionmaker, config, cameras, terminal_sessions[0], scheduler
+    )
+
     try:
         scheduler.start()
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())

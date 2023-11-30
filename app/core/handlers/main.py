@@ -1,3 +1,4 @@
+import json
 import random
 from typing import Optional
 from aiogram import F, Bot, Router, html
@@ -6,13 +7,15 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.keyboards.editor.create_post import send_create_post_menu
 from app.core.keyboards.menu import (
+    CREATE_POST_BUTTON_TEXT,
     GET_BONUSES_BUTTON_TEXT,
     PHONE_BUTTON_TEXT,
     SEE_QUEUE_BUTTON_TEXT,
-    get_menu_reply_keyboard,
     get_user_menu_reply_keyboard,
 )
+from app.core.middlewares.create_post import CreatePostMiddleware, CreatePostStateData
 from app.core.states.states import GetPhone
 from app.services.cameras.camera_stream import (
     CameraStream,
@@ -30,12 +33,24 @@ from app.utils.phone import format_phone, is_phone_correct, phone_to_text
 
 
 router = Router()
+router.message.middleware(CreatePostMiddleware())
+
+
+@router.message(Command(commands=["data"]))
+async def cmd_data(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await message.answer(json.dumps(data, indent=4))
+
+
+@router.message(Command(commands=["clear"]))
+async def cmd_clear(message: Message, state: FSMContext):
+    await state.clear()
 
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     """/start command handling. Adds new user to client_database finish states"""
-    await state.clear()
+    await state.set_state()
     text = (
         "Приветствую тебя! 😉\n\n"
         "Я твой персональный ассистент, готовый помочь сделать твой автомобиль снова чистым. Со мной ты сможешь увидеть очередь онлайн, а также узнать количество бонусов на твоем номере телефона. Пока это все что я умею, но скоро я обязательно научусь еще чему-нибудь.\n\n"
@@ -56,7 +71,7 @@ async def queue(
     config: Config,
     streams: list[CameraStream],
 ):
-    await state.clear()
+    await state.set_state()
     cameras = list(filter(lambda x: "queue" in x.tags, streams))
     photos = []
     for camera in cameras:
@@ -71,7 +86,7 @@ async def msg_get_bonuses(
     state: FSMContext,
     session: AsyncSession,
 ):
-    await state.clear()
+    await state.set_state()
     userdao = UserDAO(session=session)
 
     user: User = await userdao.get_by_id(message.chat.id)
@@ -93,7 +108,7 @@ async def msg_get_bonuses(
     )
 
 
-@router.message(F.text.startswith(PHONE_BUTTON_TEXT))
+@router.message(F.text == PHONE_BUTTON_TEXT)
 async def msg_phone(message: Message, state: FSMContext):
     await message.answer("Введите пожалуйста новый номер телефона")
     await state.set_state(GetPhone.get_phone)
@@ -124,7 +139,7 @@ async def msg_get_phone(message: Message, state: FSMContext, session: AsyncSessi
 
     await message.answer(
         f"Вы сменили номер телефона!\n" f"Новый номер: {format_phone(phone)}",
-        reply_markup=get_menu_reply_keyboard(phone),
+        reply_markup=await get_user_menu_reply_keyboard(message.chat.id, session),
     )
 
     await state.clear()
@@ -145,9 +160,18 @@ async def send_registration_promocode(message: Message, session: AsyncSession):
     )
 
 
+@router.message(F.text == CREATE_POST_BUTTON_TEXT)
+async def msg_create_post(
+    message: Message,
+    state: FSMContext,
+    create_post_state_data: CreatePostStateData,
+):
+    await send_create_post_menu(message.answer, state, create_post_state_data)
+
+
 @router.message(Command(commands=["queue", "photo"]))
-async def cmd_deprecated_photo_commands(message: Message):
+async def cmd_deprecated_photo_commands(message: Message, session):
     await message.answer(
         "Данная команда больше не работает :(\nВы можете посмотреть очередь через меню",
-        reply_markup=get_menu_reply_keyboard(),
+        reply_markup=await get_user_menu_reply_keyboard(message.chat.id, session),
     )
