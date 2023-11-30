@@ -200,7 +200,10 @@ async def cb_upload_post(
         return
 
     postdao = PostDAO(session)
-    post = await postdao.add(Post())
+
+    post_upload_time = upload_time if upload_time else datetime.now()
+    post = await postdao.add(Post(upload_date=post_upload_time))
+
     post_parts = await create_post_state_data.get_post_parts()
     for part in post_parts:
         part.post_id = post.id
