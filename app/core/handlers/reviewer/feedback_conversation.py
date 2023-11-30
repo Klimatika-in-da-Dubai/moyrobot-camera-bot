@@ -15,7 +15,9 @@ from app.core.keyboards.close_conversation import (
     CLOSE_CONVERSATION_BUTTON_TEXT,
     get_close_conversation_keyboard,
 )
-from app.core.keyboards.menu import get_menu_reply_keyboard
+from app.core.keyboards.menu import (
+    get_user_menu_reply_keyboard,
+)
 from app.core.middlewares.feedback_conversation import (
     FeedbackConversationMiddleware,
     FeedbackConversationStateData,
@@ -46,6 +48,7 @@ async def cb_feedback_conversation(
     state: FSMContext,
     session: AsyncSession,
 ):
+    assert cb.message is not None
     feedbackdao = FeedbackDAO(session)
     userdao = UserDAO(session)
 
@@ -96,6 +99,7 @@ async def cancel_conversation(
     bot: Bot,
     feedback_conversation: FeedbackConversationStateData,
 ):
+    assert cb.message is not None
     feedbackdao = FeedbackDAO(session)
     await cb.message.delete()
     client_id = await feedback_conversation.get_client_id()
@@ -146,11 +150,12 @@ async def close_conversation(
     await bot.send_message(
         client_id,
         text="Беседа закрыта. Удачного дня!",
-        reply_markup=get_menu_reply_keyboard(),
+        reply_markup=await get_user_menu_reply_keyboard(message.chat.id, session),
     )
 
     await message.answer(
-        "Вы прекратили разговор с клиентом", reply_markup=get_menu_reply_keyboard()
+        "Вы прекратили разговор с клиентом",
+        reply_markup=await get_user_menu_reply_keyboard(message.chat.id, session),
     )
 
 

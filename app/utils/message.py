@@ -30,7 +30,7 @@ def get_message_attached_file(message: Message) -> models.File | None:
         return None
 
     file = models.File()
-    file.caption = message.caption if message.caption else ""
+    file.caption = message.caption or ""
 
     if message.photo:
         file.id = message.photo[-1].file_id

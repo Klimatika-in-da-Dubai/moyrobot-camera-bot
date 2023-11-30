@@ -27,6 +27,7 @@ from app.services.client_database.models.washing import *
 from app.services.client_database.models.question import *
 from app.services.client_database.models.feedback import *
 from app.services.client_database.models.promocode import *
+from app.services.client_database.models.post import *
 
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata

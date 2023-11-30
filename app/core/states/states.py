@@ -22,3 +22,15 @@ class Client(StatesGroup):
 
 class Reviewer(StatesGroup):
     feedback_conversation = State()
+
+
+class Editor(StatesGroup):
+    class CreatePost(StatesGroup):
+        menu = State()
+        get_part = State()
+        get_upload_time = State()
+
+        class EditPart(StatesGroup):
+            menu = State()
+            change_text = State()
+            change_media = State()

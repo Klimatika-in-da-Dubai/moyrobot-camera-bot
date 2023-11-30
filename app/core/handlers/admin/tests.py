@@ -12,6 +12,7 @@ from app.services.scheduler.washings_handling.client_feedback import (
     create_storage_key,
     send_feedback_request,
 )
+from app.settings.config import Config
 
 
 tests_router = Router()
@@ -24,6 +25,7 @@ async def test_feedback(
     command: CommandObject,
     state: FSMContext,
     session: AsyncSession,
+    config: Config,
 ):
     userdao = UserDAO(session)
     washingdao = WashingDAO(session)
@@ -40,4 +42,4 @@ async def test_feedback(
 
     key = create_storage_key(bot, user)
     new_state = FSMContext(storage=state.storage, key=key)
-    await send_feedback_request(bot, user, washing, session, new_state)
+    await send_feedback_request(bot, user, washing, config, new_state)
