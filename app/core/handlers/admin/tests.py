@@ -42,4 +42,4 @@ async def test_feedback(
 
     key = create_storage_key(bot, user)
     new_state = FSMContext(storage=state.storage, key=key)
-    await send_feedback_request(bot, user, washing, config, new_state)
+    await send_feedback_request(bot, user, washing, session, new_state)

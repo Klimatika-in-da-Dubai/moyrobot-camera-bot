@@ -9,6 +9,7 @@ from apscheduler.executors.base import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.handlers.user.feedback.utils import (
     get_feedback_id_from_state,
+    get_notification_message,
     send_feedback_to_reviewers,
     send_text_feedback,
 )
@@ -98,13 +99,10 @@ async def send_feedback_with_attached_files(
     bot: Bot, user: User, feedback_id: int, session: AsyncSession
 ) -> Message:
     feedbackdao = FeedbackDAO(session)
-    questiondao = QuestionDAO(session)
     userdao = UserDAO(session)
     feedback: Feedback = await feedbackdao.get_by_id(feedback_id)
-    question: Question = await questiondao.get_by_id(feedback.question_id)
     attached_files = await feedbackdao.get_attached_files_to_feedback(feedback_id)
-    text = "Получен отзыв от клиента!\n" f"Вопрос: {question.text}\n" "Ответ: "
-
+    text = await get_notification_message(session, feedback.user_id)
     reply_markup = None
     if await userdao.is_user_have_permission(user.id, PermissionEnum.ANSWER_FEEDBACK):
         reply_markup = get_answer_feedback_keyboard(feedback.id)

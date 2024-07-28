@@ -6,6 +6,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.handlers.user.feedback.utils import (
     get_feedback_id_from_state,
+    get_notification_message,
     send_feedback_to_reviewers,
 )
 from app.core.keyboards.menu import get_user_menu_reply_keyboard
@@ -51,14 +52,6 @@ async def send_yes_no_feedback(
     bot: Bot, user: User, feedback_id: int, session: AsyncSession
 ) -> Message:
     feedbackdao = FeedbackDAO(session)
-    questiondao = QuestionDAO(session)
     feedback: Feedback = await feedbackdao.get_by_id(feedback_id)
-    question: Question = await questiondao.get_by_id(feedback.question_id)
-    messages: list = await feedbackdao.get_feedback_messages(feedback_id)
-    text = (
-        "Получен отзыв от клиента!\n"
-        f"Вопрос: {question.text}\n"
-        f"Ответ: {messages[0].text}"
-    )
-
+    text = await get_notification_message(session, feedback.user_id)
     return await bot.send_message(user.id, text)
