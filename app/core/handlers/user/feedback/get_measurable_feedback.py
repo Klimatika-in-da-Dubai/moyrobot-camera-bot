@@ -5,6 +5,7 @@ from apscheduler.executors.base import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.handlers.user.feedback.utils import (
     get_feedback_id_from_state,
+    get_notification_message,
     send_feedback_to_reviewers,
 )
 import re
@@ -39,7 +40,6 @@ async def msg_measurable_feedback(
     bot: Bot,
     terminal_session: TerminalSession,
 ):
-    """This handler will receive a complete album of any type."""
     assert message.text is not None
     if not pattern.match(message.text):
         await message.answer(
@@ -81,16 +81,10 @@ async def send_measurable_feedback(
     bot: Bot, user: User, feedback_id: int, session: AsyncSession
 ) -> Message:
     feedbackdao = FeedbackDAO(session)
-    questiondao = QuestionDAO(session)
     userdao = UserDAO(session)
     feedback: Feedback = await feedbackdao.get_by_id(feedback_id)
-    question: Question = await questiondao.get_by_id(feedback.question_id)
-    messages: list = await feedbackdao.get_feedback_messages(feedback_id)
-    mark = int(messages[0].text)
-    mark_text = "⭐" * mark
-    text = (
-        "Получен отзыв от клиента!\n" f"Вопрос: {question.text}\n" f"Ответ: {mark_text}"
-    )
+
+    text = await get_notification_message(session, feedback.user_id)
     reply_markup = None
     if await userdao.is_user_have_permission(user.id, PermissionEnum.ANSWER_FEEDBACK):
         reply_markup = get_answer_feedback_keyboard(feedback.id)

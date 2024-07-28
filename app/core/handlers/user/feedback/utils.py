@@ -14,6 +14,7 @@ from app.services.client_database.models.feedback import Feedback
 from app.services.client_database.models.question import Question
 from app.services.client_database.models.role import PermissionEnum
 from app.services.client_database.models.user import User
+from app.services.terminal import session
 
 SEND_FEEDBACK_DELAY = 0.05
 
@@ -68,19 +69,56 @@ async def send_text_feedback(
     bot: Bot, user: User, feedback_id: int, session: AsyncSession
 ) -> Message:
     feedbackdao = FeedbackDAO(session)
-    questiondao = QuestionDAO(session)
     userdao = UserDAO(session)
     feedback: Feedback = await feedbackdao.get_by_id(feedback_id)
-    question: Question = await questiondao.get_by_id(feedback.question_id)
-    messages: list = await feedbackdao.get_feedback_messages(feedback_id)
-    text = (
-        "Получен отзыв от клиента!\n"
-        f"Вопрос: {question.text}\n"
-        f"Ответ: {messages[0].text}"
-    )
-
+    text = await get_notification_message(session, feedback.user_id)
     reply_markup = None
     if await userdao.is_user_have_permission(user.id, PermissionEnum.ANSWER_FEEDBACK):
         reply_markup = get_answer_feedback_keyboard(feedback.id)
 
     return await bot.send_message(user.id, text, reply_markup=reply_markup)
+
+
+async def get_notification_message(session: AsyncSession, client_id: int) -> str:
+    questions = await get_user_questions(session, client_id)
+    first_question = questions[3]
+    second_question = questions[2]
+    third_question = questions[1]
+    main_question = questions[0]
+
+    main_answer = main_question[1]
+    if main_answer.isnumeric():
+        main_answer = int(main_answer) * "⭐"
+
+    first_answer = int(first_question[1]) * "⭐"
+    second_answer = int(second_question[1]) * "⭐"
+    third_answer = int(third_question[1]) * "⭐"
+    return (
+        "Получен отзыв от клиента!\n"
+        f"1. {first_question[0]}: {first_answer}\n"
+        f"2. {second_question[0]}: {second_answer}\n"
+        f"3. {third_question[0]}: {third_answer}\n"
+        f"4. {main_question[0]}\n"
+        f"Ответ: {main_answer}"
+    )
+
+
+async def get_user_questions(
+    session: AsyncSession, client_id: int
+) -> list[tuple[str, str]]:
+    feedbackdao = FeedbackDAO(session)
+    questiondao = QuestionDAO(session)
+
+    feedbacks: list[Feedback] = await feedbackdao.get_last_4_answered_feedbacks(
+        client_id
+    )
+    questions_texts: list[str] = [
+        (await questiondao.get_by_id(feedback.question_id)).text
+        for feedback in feedbacks
+    ]
+    answers: list[str] = [
+        (await feedbackdao.get_feedback_messages(feedback.id))[0].text
+        for feedback in feedbacks
+    ]
+
+    return [(text, answer) for text, answer in zip(questions_texts, answers)]
