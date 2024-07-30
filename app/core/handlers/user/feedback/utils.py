@@ -87,7 +87,8 @@ async def get_notification_message(session: AsyncSession, client_id: int) -> str
     main_question = questions[0]
 
     main_answer = main_question[1]
-    if main_answer.isnumeric():
+    if main_answer.isnumeric() and 1 <= int(main_answer) <= 5:
+
         main_answer = int(main_answer) * "⭐"
 
     first_answer = int(first_question[1]) * "⭐"
@@ -95,9 +96,9 @@ async def get_notification_message(session: AsyncSession, client_id: int) -> str
     third_answer = int(third_question[1]) * "⭐"
     return (
         "Получен отзыв от клиента!\n"
-        f"1. {first_question[0]}: {first_answer}\n"
-        f"2. {second_question[0]}: {second_answer}\n"
-        f"3. {third_question[0]}: {third_answer}\n"
+        f"1. {first_question[0]}:\t{first_answer}\n"
+        f"2. {second_question[0]}:\t{second_answer}\n"
+        f"3. {third_question[0]}:\t{third_answer}\n"
         f"4. {main_question[0]}\n"
         f"Ответ: {main_answer}"
     )
